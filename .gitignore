@@ -5,3 +5,5 @@
 
 #test files
 .restaurant_api_test.postman_collection.json
+
+setup-db.bat
