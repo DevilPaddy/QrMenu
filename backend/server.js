@@ -3,7 +3,7 @@ import cors from 'cors';
 import models from './models/index.js';
 import authRoutes from './routes/auth.routes.js';
 import restaurantRoutes from './routes/restaurant.routes.js';
-
+import subscriptionRoutes from './routes/subscription.routes.js'
 
 const { sequelize } = models;
 
@@ -25,7 +25,8 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 // Restaurant routes...
 app.use('/api/restaurants', restaurantRoutes);
-
+// Subscription routes...
+app.use('/api/subscriptions', subscriptionRoutes);
 
 
 
