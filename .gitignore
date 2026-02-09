@@ -2,3 +2,6 @@
 # Env file
 .env
 .env.local
+
+#test files
+.restaurant_api_test.postman_collection.json

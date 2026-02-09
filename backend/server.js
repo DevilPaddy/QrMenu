@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import models from './models/index.js';
 import authRoutes from './routes/auth.routes.js';
+import restaurantRoutes from './routes/restaurant.routes.js';
+
 
 const { sequelize } = models;
 
@@ -18,7 +20,14 @@ app.get('/', (req, res) => {
 });
 
 // Routes...
+
+// auth routes...
 app.use('/api/auth', authRoutes);
+// Restaurant routes...
+app.use('/api/restaurants', restaurantRoutes);
+
+
+
 
 // DB Sync 
 (async () => {
