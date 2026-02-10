@@ -4,6 +4,8 @@ import models from './models/index.js';
 import authRoutes from './routes/auth.routes.js';
 import restaurantRoutes from './routes/restaurant.routes.js';
 import subscriptionRoutes from './routes/subscription.routes.js'
+import tablesRoutes from './routes/table.routes.js';
+import qrTokenRoutes from './routes/qrToken.routes.js';
 
 const { sequelize } = models;
 
@@ -27,10 +29,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 // Subscription routes...
 app.use('/api/subscriptions', subscriptionRoutes);
+// Table routes...
+app.use('/api/tables', tablesRoutes);
+// Qr code routes...
+app.use('/api', qrTokenRoutes);
 
-
-
-// DB Sync 
+// DB Sync...
 (async () => {
   try {
     await sequelize.authenticate();
