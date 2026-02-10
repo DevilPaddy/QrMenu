@@ -40,7 +40,7 @@ export const getRestaurants = async (req, res) => {
         const { count, rows } = await Restaurant.findAndCountAll({
             limit,
             offset,
-            order: [['createdAt', 'DESC']],
+            order: [['created_at', 'DESC']],
         });
 
         return res.json({

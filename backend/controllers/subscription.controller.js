@@ -104,8 +104,11 @@ export const getMySubscriptions = async (req, res) => {
         }
 
         const subscriptions = await Subscription.findAll({
-            where: { restaurant_id: restaurant.id },
-            order: [['createdAt', 'DESC']],
+            where: {
+                restaurant_id: restaurant.id,
+                status: 'ACTIVE',
+            },
+            order: [['created_at', 'DESC']],
         });
 
         return res.json(subscriptions);
