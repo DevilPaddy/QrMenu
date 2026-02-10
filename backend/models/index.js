@@ -1,11 +1,13 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/database.js'; // Ensure this path is correct
+import sequelize from '../config/database.js';
 
+// =======================
 // 1. Import Model Definitions
+// =======================
 import UserDef from './User.js';
 import RestaurantDef from './Restaurant.js';
 import SubscriptionDef from './Subscription.js';
-import RestaurantTableDef from './Table.js'; // Check filename: usually 'RestaurantTable.js' or 'Table.js'
+import RestaurantTableDef from './Table.js';
 import QRTokenDef from './QRToken.js';
 import SessionDef from './Session.js';
 import CartDef from './Cart.js';
@@ -15,7 +17,9 @@ import MenuItemDef from './MenuItems.js';
 import OrderDef from './Order.js';
 import OrderItemDef from './OrderItems.js';
 
+// =======================
 // 2. Initialize Models
+// =======================
 const models = {
   User: UserDef(sequelize, DataTypes),
   Restaurant: RestaurantDef(sequelize, DataTypes),
@@ -31,62 +35,163 @@ const models = {
   OrderItem: OrderItemDef(sequelize, DataTypes),
 };
 
+// =======================
 // 3. Define Associations
-// (We do this AFTER all models are initialized to avoid circular dependency errors)
+// =======================
 
-// --- Auth & Users ---
-models.User.hasOne(models.Restaurant, { foreignKey: 'owner_id', as: 'restaurant' });
-models.Restaurant.belongsTo(models.User, { foreignKey: 'owner_id', as: 'owner' });
+// --- Users & Restaurants (Owner) ---
+models.User.hasOne(models.Restaurant, {
+  foreignKey: 'owner_id',
+  as: 'restaurant',
+});
 
-// (Removed SuperAdmin relations because you commented out the model)
+models.Restaurant.belongsTo(models.User, {
+  foreignKey: 'owner_id',
+  as: 'owner',
+});
 
-// --- Subscriptions ---
-models.Restaurant.hasMany(models.Subscription, { foreignKey: 'restaurant_id' });
-models.Subscription.belongsTo(models.Restaurant, { foreignKey: 'restaurant_id' });
+// --- Subscriptions (Restaurant-based SaaS model) ---
+models.Restaurant.hasMany(models.Subscription, {
+  foreignKey: 'restaurant_id',
+  as: 'subscriptions',
+});
 
-// --- Tables ---
-models.Restaurant.hasMany(models.RestaurantTable, { foreignKey: 'restaurant_id' });
-models.RestaurantTable.belongsTo(models.Restaurant, { foreignKey: 'restaurant_id' });
+models.Subscription.belongsTo(models.Restaurant, {
+  foreignKey: 'restaurant_id',
+  as: 'restaurant',
+});
+
+// --- Restaurant Tables ---
+models.Restaurant.hasMany(models.RestaurantTable, {
+  foreignKey: 'restaurant_id',
+  as: 'tables',
+});
+
+models.RestaurantTable.belongsTo(models.Restaurant, {
+  foreignKey: 'restaurant_id',
+  as: 'restaurant',
+});
 
 // --- QR Tokens ---
-models.RestaurantTable.hasMany(models.QRToken, { foreignKey: 'table_id' });
-models.QRToken.belongsTo(models.RestaurantTable, { foreignKey: 'table_id' });
+models.RestaurantTable.hasMany(models.QRToken, {
+  foreignKey: 'table_id',
+  as: 'qrTokens',
+});
 
-// --- Sessions ---
-models.QRToken.hasMany(models.Session, { foreignKey: 'qr_token_id' });
-models.Session.belongsTo(models.QRToken, { foreignKey: 'qr_token_id' });
+models.QRToken.belongsTo(models.RestaurantTable, {
+  foreignKey: 'table_id',
+  as: 'table',
+});
+
+// --- Sessions (IMPORTANT: direct link to Restaurant) ---
+models.Restaurant.hasMany(models.Session, {
+  foreignKey: 'restaurant_id',
+  as: 'sessions',
+});
+
+models.Session.belongsTo(models.Restaurant, {
+  foreignKey: 'restaurant_id',
+  as: 'restaurant',
+});
+
+models.QRToken.hasMany(models.Session, {
+  foreignKey: 'qr_token_id',
+  as: 'sessions',
+});
+
+models.Session.belongsTo(models.QRToken, {
+  foreignKey: 'qr_token_id',
+  as: 'qrToken',
+});
 
 // --- Menus ---
-models.Restaurant.hasMany(models.Menu, { foreignKey: 'restaurant_id' });
-models.Menu.belongsTo(models.Restaurant, { foreignKey: 'restaurant_id' });
+models.Restaurant.hasMany(models.Menu, {
+  foreignKey: 'restaurant_id',
+  as: 'menus',
+});
 
-models.Menu.hasMany(models.MenuItem, { foreignKey: 'menu_id' });
-models.MenuItem.belongsTo(models.Menu, { foreignKey: 'menu_id' });
+models.Menu.belongsTo(models.Restaurant, {
+  foreignKey: 'restaurant_id',
+  as: 'restaurant',
+});
+
+models.Menu.hasMany(models.MenuItem, {
+  foreignKey: 'menu_id',
+  as: 'items',
+});
+
+models.MenuItem.belongsTo(models.Menu, {
+  foreignKey: 'menu_id',
+  as: 'menu',
+});
 
 // --- Carts ---
-models.Session.hasOne(models.Cart, { foreignKey: 'session_id' });
-models.Cart.belongsTo(models.Session, { foreignKey: 'session_id' });
+models.Session.hasOne(models.Cart, {
+  foreignKey: 'session_id',
+  as: 'cart',
+});
 
-models.Cart.hasMany(models.CartItem, { foreignKey: 'cart_id' });
-models.CartItem.belongsTo(models.Cart, { foreignKey: 'cart_id' });
+models.Cart.belongsTo(models.Session, {
+  foreignKey: 'session_id',
+  as: 'session',
+});
 
-// Link CartItems to MenuItems (so we know what food is in the cart)
-models.MenuItem.hasMany(models.CartItem, { foreignKey: 'menu_item_id' });
-models.CartItem.belongsTo(models.MenuItem, { foreignKey: 'menu_item_id' });
+models.Cart.hasMany(models.CartItem, {
+  foreignKey: 'cart_id',
+  as: 'items',
+});
+
+models.CartItem.belongsTo(models.Cart, {
+  foreignKey: 'cart_id',
+  as: 'cart',
+});
+
+// --- Cart Items → Menu Items ---
+models.MenuItem.hasMany(models.CartItem, {
+  foreignKey: 'menu_item_id',
+  as: 'cartItems',
+});
+
+models.CartItem.belongsTo(models.MenuItem, {
+  foreignKey: 'menu_item_id',
+  as: 'menuItem',
+});
 
 // --- Orders ---
-models.Session.hasMany(models.Order, { foreignKey: 'session_id' });
-models.Order.belongsTo(models.Session, { foreignKey: 'session_id' });
+models.Session.hasMany(models.Order, {
+  foreignKey: 'session_id',
+  as: 'orders',
+});
 
-models.Order.hasMany(models.OrderItem, { foreignKey: 'order_id' });
-models.OrderItem.belongsTo(models.Order, { foreignKey: 'order_id' });
+models.Order.belongsTo(models.Session, {
+  foreignKey: 'session_id',
+  as: 'session',
+});
 
-// Link OrderItems to MenuItems (so we know what food was ordered)
-models.MenuItem.hasMany(models.OrderItem, { foreignKey: 'menu_item_id' });
-models.OrderItem.belongsTo(models.MenuItem, { foreignKey: 'menu_item_id' });
+models.Order.hasMany(models.OrderItem, {
+  foreignKey: 'order_id',
+  as: 'items',
+});
 
+models.OrderItem.belongsTo(models.Order, {
+  foreignKey: 'order_id',
+  as: 'order',
+});
 
+// --- Order Items → Menu Items ---
+models.MenuItem.hasMany(models.OrderItem, {
+  foreignKey: 'menu_item_id',
+  as: 'orderItems',
+});
+
+models.OrderItem.belongsTo(models.MenuItem, {
+  foreignKey: 'menu_item_id',
+  as: 'menuItem',
+});
+
+// =======================
 // 4. Attach Sequelize Instance
+// =======================
 models.sequelize = sequelize;
 models.Sequelize = sequelize.Sequelize;
 

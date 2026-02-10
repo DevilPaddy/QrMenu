@@ -391,6 +391,316 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "4. Restaurant Tables (Owner)",
+			"item": [
+				{
+					"name": "Create Table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Status 201\", function () {",
+									"  pm.response.to.have.status(201);",
+									"});",
+									"if (jsonData.id) {",
+									"  pm.collectionVariables.set(\"table_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{owner_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"table_number\": \"T1\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tables",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tables"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Tables",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"pm.expect(pm.response.json()).to.be.an('array');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{owner_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/tables",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tables"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{owner_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"table_number\": \"T1-Updated\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tables/{{table_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tables",
+								"{{table_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{owner_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"url": {
+							"raw": "{{base_url}}/tables/{{table_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tables",
+								"{{table_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. QR Token APIs (Owner)",
+			"item": [
+				{
+					"name": "Generate QR Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Status 201\", function () {",
+									"  pm.response.to.have.status(201);",
+									"});",
+									"if (jsonData.id) {",
+									"  pm.collectionVariables.set(\"qr_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{owner_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"url": {
+							"raw": "{{base_url}}/tables/{{table_id}}/qr",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tables",
+								"{{table_id}}",
+								"qr"
+							]
+						}
+					}
+				},
+				{
+					"name": "Rotate QR Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{owner_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"url": {
+							"raw": "{{base_url}}/qr/{{qr_id}}/rotate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"qr",
+								"{{qr_id}}",
+								"rotate"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get QR Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{owner_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/qr/{{qr_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"qr",
+								"{{qr_id}}"
+							]
+						}
+					}
+				}
+			]
 		}
 	],
 	"event": [
@@ -437,6 +747,16 @@
 		},
 		{
 			"key": "res_timestamp",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "table_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "qr_id",
 			"value": "",
 			"type": "string"
 		}

@@ -4,8 +4,8 @@
 .env.local
 
 #test files
+restaurant_api_test.postman_collection.json
 .restaurant_api_test.postman_collection.json
-
 setup-db.bat
 
 plane.md
