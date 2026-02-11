@@ -7,9 +7,13 @@ export default (sequelize, DataTypes) => {
       allowNull: false,
     },
 
-    status: DataTypes.ENUM('ACTIVE', 'EXPIRED', 'SUSPENDED'),
-    start_date: DataTypes.DATE,
-    end_date: DataTypes.DATE,
+    status: DataTypes.ENUM('ACTIVE', 'EXPIRED', 'CANCELED'),
+    starts_at: DataTypes.DATE,
+    ends_at: DataTypes.DATE,
+    plan: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   }, {
     tableName: 'subscriptions',
     timestamps: true,

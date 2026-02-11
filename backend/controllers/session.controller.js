@@ -1,5 +1,12 @@
 import { Op } from 'sequelize';
 import db from '../models/index.js';
+import {
+    successResponse,
+    errorResponse,
+    notFoundResponse,
+    forbiddenResponse,
+    conflictResponse
+} from '../utils/response.js';
 
 const { Session, QRToken, Restaurant } = db;
 
@@ -10,24 +17,21 @@ export const startSession = async (req, res) => {
     try {
         const { qr_token } = req.body;
 
-        if (!qr_token) {
-            return res.status(400).json({ message: 'QR token is required' });
-        }
-
         const qr = await QRToken.findOne({
             where: {
                 token: qr_token,
+                is_active: true,
                 expires_at: { [Op.gt]: new Date() },
             },
             include: [{ model: Restaurant }],
         });
 
         if (!qr) {
-            return res.status(404).json({ message: 'Invalid or expired QR token' });
+            return notFoundResponse(res, 'QR token not found or expired');
         }
 
         if (qr.Restaurant.status !== 'ACTIVE') {
-            return res.status(403).json({ message: 'Restaurant is not active' });
+            return forbiddenResponse(res, 'Restaurant is not active');
         }
 
         const existingSession = await Session.findOne({
@@ -39,8 +43,8 @@ export const startSession = async (req, res) => {
         });
 
         if (existingSession) {
-            return res.status(409).json({
-                message: 'An active session already exists for this QR',
+            return conflictResponse(res, 'An active session already exists for this QR code', {
+                existing_session_id: existingSession.id
             });
         }
 
@@ -54,13 +58,14 @@ export const startSession = async (req, res) => {
             last_activity_at: now,
             expires_at: expiresAt,
             qr_token_id: qr.id,
-            restaurant_id: qr.restaurant_id,
+            restaurant_id: qr.Restaurant.id,
         });
 
-        return res.status(201).json(session);
+        return successResponse(res, 'Session started successfully', session, 201);
+
     } catch (err) {
         console.error('Start Session Error:', err);
-        return res.status(500).json({ message: 'Internal server error' });
+        return errorResponse(res, 'Failed to start session', 'START_SESSION_ERROR');
     }
 };
 
@@ -68,10 +73,6 @@ export const startSession = async (req, res) => {
 export const cancelSession = async (req, res) => {
     try {
         const { session_id } = req.body;
-
-        if (!session_id) {
-            return res.status(400).json({ message: 'Session ID is required' });
-        }
 
         const session = await Session.findOne({
             where: {
@@ -81,15 +82,16 @@ export const cancelSession = async (req, res) => {
         });
 
         if (!session) {
-            return res.status(404).json({ message: 'Active session not found' });
+            return notFoundResponse(res, 'Active session');
         }
 
         session.status = 'CLOSED';
         await session.save();
 
-        return res.status(200).json(session);
+        return successResponse(res, 'Session cancelled successfully', session);
+
     } catch (err) {
         console.error('Cancel Session Error:', err);
-        return res.status(500).json({ message: 'Internal server error' });
+        return errorResponse(res, 'Failed to cancel session', 'CANCEL_SESSION_ERROR');
     }
 };

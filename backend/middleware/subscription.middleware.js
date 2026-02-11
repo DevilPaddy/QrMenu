@@ -1,4 +1,5 @@
 import models from '../models/index.js';
+import { forbiddenResponse, errorResponse } from '../utils/response.js';
 
 const { Subscription, Restaurant } = models;
 
@@ -13,9 +14,7 @@ export const checkSubscription = async (req, res, next) => {
         });
 
         if (!restaurant) {
-            return res.status(403).json({
-                message: 'Access Denied: No restaurant found for this user.',
-            });
+            return forbiddenResponse(res, 'No restaurant found for this user');
         }
 
         const subscription = await Subscription.findOne({
@@ -27,18 +26,14 @@ export const checkSubscription = async (req, res, next) => {
         });
 
         if (!subscription) {
-            return res.status(403).json({
-                message: 'Access Denied: No active subscription found.',
-            });
+            return forbiddenResponse(res, 'Active subscription required to perform this action');
         }
 
         if (
-            subscription.end_date &&
-            new Date() > new Date(subscription.end_date)
+            subscription.ends_at &&
+            new Date() > new Date(subscription.ends_at)
         ) {
-            return res.status(403).json({
-                message: 'Access Denied: Subscription has expired.',
-            });
+            return forbiddenResponse(res, 'Subscription has expired. Please renew to continue');
         }
 
         req.restaurant = restaurant;
@@ -47,8 +42,6 @@ export const checkSubscription = async (req, res, next) => {
         next();
     } catch (error) {
         console.error('Subscription Check Error:', error);
-        return res
-            .status(500)
-            .json({ message: 'Internal Server Error verifying subscription.' });
+        return errorResponse(res, 'Failed to verify subscription status', 'SUBSCRIPTION_CHECK_ERROR');
     }
 };

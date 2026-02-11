@@ -9,6 +9,12 @@ import {
 } from '../controllers/restaurant.controller.js';
 import { checkSubscription } from '../middleware/subscription.middleware.js';
 import { verifyToken, isAdmin, isRestaurantOwner } from '../middleware/auth.middleware.js';
+import { 
+  validateCreateRestaurant, 
+  validateUpdateRestaurant, 
+  validateIdParam,
+  validatePagination 
+} from '../middleware/validation.middleware.js';
 
 const router = express.Router();
 
@@ -26,9 +32,9 @@ router.patch('/me',
   verifyToken,
   isRestaurantOwner,
   checkSubscription,
+  validateUpdateRestaurant,
   updateMyRestaurant
 );
-
 
 // SUPER ADMIN ROUTES...
 
@@ -36,6 +42,7 @@ router.patch('/me',
 router.get('/',
   verifyToken,
   isAdmin,
+  validatePagination,
   getRestaurants
 );
 
@@ -43,6 +50,7 @@ router.get('/',
 router.post('/',
   verifyToken,
   isAdmin,
+  validateCreateRestaurant,
   createRestaurant
 );
 
@@ -50,6 +58,7 @@ router.post('/',
 router.patch('/:id/enable',
   verifyToken,
   isAdmin,
+  validateIdParam,
   enableRestaurants
 );
 
@@ -57,6 +66,7 @@ router.patch('/:id/enable',
 router.patch('/:id/disable',
   verifyToken,
   isAdmin,
+  validateIdParam,
   disableRestaurants
 );
 

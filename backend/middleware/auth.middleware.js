@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { unauthorizedResponse, forbiddenResponse, errorResponse } from '../utils/response.js';
 
 dotenv.config();
 
@@ -8,42 +9,42 @@ export const verifyToken = (req, res, next) => {
         const authHeader = req.headers['authorization'];
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ message: 'Access Denied: No token provided' });
+            return unauthorizedResponse(res, 'Access token required');
         }
 
         const token = authHeader.split(' ')[1];
 
         if (!token) {
-            return res.status(401).json({ message: 'Access Denied: Malformed token' });
+            return unauthorizedResponse(res, 'Malformed authorization header');
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
         req.user = decoded;
-
         next();
+        
     } catch (err) {
         if (err.name === 'TokenExpiredError') {
-            return res.status(401).json({ message: 'Session expired. Please log in again.' });
+            return unauthorizedResponse(res, 'Token has expired. Please log in again');
         }
         if (err.name === 'JsonWebTokenError') {
-            return res.status(403).json({ message: 'Invalid token.' });
+            return forbiddenResponse(res, 'Invalid token provided');
         }
 
-        return res.status(500).json({ message: 'Failed to authenticate token.' });
+        console.error('Token verification error:', err);
+        return errorResponse(res, 'Token verification failed', 'TOKEN_VERIFICATION_ERROR');
     }
 };
 
 export const isAdmin = (req, res, next) => {
     if (!req.user || req.user.role !== 'SUPER_ADMIN') {
-        return res.status(403).json({ message: 'Access Denied: Requires Super Admin privileges' });
+        return forbiddenResponse(res, 'Super Admin privileges required');
     }
     next();
 };
 
 export const isRestaurantOwner = (req, res, next) => {
     if (!req.user || req.user.role !== 'RESTAURANT_ADMIN') {
-        return res.status(403).json({ message: 'Access Denied: Requires Restaurant Owner privileges' });
+        return forbiddenResponse(res, 'Restaurant Owner privileges required');
     }
     next();
 };

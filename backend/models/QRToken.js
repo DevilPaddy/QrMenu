@@ -18,6 +18,12 @@ export default (sequelize, DataTypes) => {
       defaultValue: true,
     },
 
+    expires_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: () => new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+    },
+
     regenerated_at: DataTypes.DATE,
   }, {
     tableName: 'qr_tokens',

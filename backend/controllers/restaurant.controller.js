@@ -1,33 +1,40 @@
 import models from '../models/index.js';
+import { 
+    successResponse, 
+    errorResponse, 
+    conflictResponse, 
+    notFoundResponse,
+    forbiddenResponse 
+} from '../utils/response.js';
+
 const { Restaurant } = models;
 
 export const createRestaurant = async (req, res) => {
     try {
-        let { name, owner_id } = req.body;
-
-        if (!name || !owner_id) {
-            return res.status(400).json({ message: 'Owner and Name are required' });
-        }
+        let { name, owner_id, address } = req.body;
 
         name = name.trim();
 
         const restaurant = await Restaurant.create({
             name,
             owner_id,
+            address: address?.trim() || null,
             status: 'ACTIVE',
         });
 
-        return res.status(201).json(restaurant);
+        return successResponse(res, 'Restaurant created successfully', restaurant, 201);
 
     } catch (error) {
+        console.error('Create restaurant error:', error);
+        
         if (error.name === 'SequelizeUniqueConstraintError') {
-            return res.status(409).json({ message: 'A restaurant with this name already exists.' });
+            return conflictResponse(res, 'A restaurant with this name already exists', { name });
         }
         if (error.name === 'SequelizeForeignKeyConstraintError') {
-            return res.status(400).json({ message: 'Invalid owner_id provided.' });
+            return errorResponse(res, 'Invalid owner_id provided', 'INVALID_OWNER', null, 400);
         }
-        console.error(error);
-        return res.status(500).json({ message: 'Internal Server Error' });
+        
+        return errorResponse(res, 'Failed to create restaurant', 'CREATE_RESTAURANT_ERROR');
     }
 };
 
@@ -41,17 +48,24 @@ export const getRestaurants = async (req, res) => {
             limit,
             offset,
             order: [['created_at', 'DESC']],
+            attributes: { exclude: [] } // Include all fields for admin
         });
 
-        return res.json({
-            totalItems: count,
-            totalPages: Math.ceil(count / limit),
-            currentPage: page,
+        const paginationData = {
             restaurants: rows,
-        });
+            pagination: {
+                totalItems: count,
+                totalPages: Math.ceil(count / limit),
+                currentPage: page,
+                itemsPerPage: limit
+            }
+        };
+
+        return successResponse(res, 'Restaurants retrieved successfully', paginationData);
+        
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: 'Error retrieving restaurant data' });
+        console.error('Get restaurants error:', err);
+        return errorResponse(res, 'Failed to retrieve restaurants', 'GET_RESTAURANTS_ERROR');
     }
 };
 
@@ -61,20 +75,21 @@ export const enableRestaurants = async (req, res) => {
         const restaurant = await Restaurant.findByPk(id);
 
         if (!restaurant) {
-            return res.status(404).json({ message: 'Restaurant not found' });
+            return notFoundResponse(res, 'Restaurant');
         }
 
         if (restaurant.status === 'ACTIVE') {
-            return res.json({ message: 'Restaurant is already active', restaurant });
+            return successResponse(res, 'Restaurant is already active', restaurant);
         }
 
         restaurant.status = 'ACTIVE';
         await restaurant.save();
 
-        return res.status(200).json({ message: 'Restaurant enabled' });
+        return successResponse(res, 'Restaurant enabled successfully', restaurant);
+        
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: 'Error enabling restaurant' });
+        console.error('Enable restaurant error:', err);
+        return errorResponse(res, 'Failed to enable restaurant', 'ENABLE_RESTAURANT_ERROR');
     }
 };
 
@@ -84,28 +99,28 @@ export const disableRestaurants = async (req, res) => {
         const restaurant = await Restaurant.findByPk(id);
 
         if (!restaurant) {
-            return res.status(404).json({ message: 'Restaurant not found' });
+            return notFoundResponse(res, 'Restaurant');
         }
 
         if (restaurant.status === 'DISABLED') {
-            return res.json({ message: 'Restaurant is already disabled', restaurant });
+            return successResponse(res, 'Restaurant is already disabled', restaurant);
         }
 
         restaurant.status = 'DISABLED';
         await restaurant.save();
 
-        return res.status(200).json({ message: 'Restaurant disabled' });
+        return successResponse(res, 'Restaurant disabled successfully', restaurant);
 
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: 'Error disabling restaurant' });
+        console.error('Disable restaurant error:', err);
+        return errorResponse(res, 'Failed to disable restaurant', 'DISABLE_RESTAURANT_ERROR');
     }
 };
 
 export const getMyRestaurant = async (req, res) => {
     try {
         if (!req.user || !req.user.id) {
-            return res.status(401).json({ message: 'Unauthorized execution context' });
+            return forbiddenResponse(res, 'Invalid authentication context');
         }
 
         const restaurant = await Restaurant.findOne({
@@ -113,21 +128,21 @@ export const getMyRestaurant = async (req, res) => {
         });
 
         if (!restaurant) {
-            return res.status(404).json({ message: 'No restaurant found for this user' });
+            return notFoundResponse(res, 'Restaurant');
         }
 
-        return res.json(restaurant);
+        return successResponse(res, 'Restaurant retrieved successfully', restaurant);
 
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: 'Error fetching restaurant' });
+        console.error('Get my restaurant error:', err);
+        return errorResponse(res, 'Failed to retrieve restaurant', 'GET_MY_RESTAURANT_ERROR');
     }
 };
 
 export const updateMyRestaurant = async (req, res) => {
     try {
         if (!req.user || !req.user.id) {
-            return res.status(401).json({ message: 'Unauthorized execution context' });
+            return forbiddenResponse(res, 'Invalid authentication context');
         }
 
         const restaurant = await Restaurant.findOne({
@@ -135,14 +150,19 @@ export const updateMyRestaurant = async (req, res) => {
         });
 
         if (!restaurant) {
-            return res.status(404).json({ message: 'Restaurant not found' });
+            return notFoundResponse(res, 'Restaurant');
         }
 
-        const { name } = req.body;
+        const { name, address } = req.body;
         let isUpdated = false;
 
-        if (name && name.trim() !== '' && name !== restaurant.name) {
+        if (name && name.trim() !== '' && name.trim() !== restaurant.name) {
             restaurant.name = name.trim();
+            isUpdated = true;
+        }
+
+        if (address !== undefined && address?.trim() !== restaurant.address) {
+            restaurant.address = address?.trim() || null;
             isUpdated = true;
         }
 
@@ -150,13 +170,15 @@ export const updateMyRestaurant = async (req, res) => {
             await restaurant.save();
         }
 
-        return res.json(restaurant);
+        return successResponse(res, 'Restaurant updated successfully', restaurant);
 
     } catch (err) {
+        console.error('Update restaurant error:', err);
+        
         if (err.name === 'SequelizeUniqueConstraintError') {
-            return res.status(409).json({ message: 'Restaurant name already taken' });
+            return conflictResponse(res, 'Restaurant name already taken', { name: req.body.name });
         }
-        console.error(err);
-        return res.status(500).json({ message: 'Error updating restaurant' });
+        
+        return errorResponse(res, 'Failed to update restaurant', 'UPDATE_RESTAURANT_ERROR');
     }
 };

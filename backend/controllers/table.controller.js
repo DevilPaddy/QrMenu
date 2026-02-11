@@ -1,119 +1,132 @@
 import models from '../models/index.js';
+import { 
+    successResponse, 
+    errorResponse, 
+    notFoundResponse,
+    forbiddenResponse 
+} from '../utils/response.js';
 
 const { Restaurant, RestaurantTable } = models;
 
 const getOwnedRestaurant = async (userId) => {
-  return Restaurant.findOne({
-    where: { owner_id: userId },
-  });
+    return Restaurant.findOne({
+        where: { owner_id: userId },
+    });
 };
 
 //POST /tables...
 export const createTable = async (req, res) => {
-  const { table_number } = req.body;
+    try {
+        const { table_number } = req.body;
 
-  if (!table_number) {
-    return res.status(400).json({ message: 'table_number is required' });
-  }
+        const restaurant = await getOwnedRestaurant(req.user.id);
+        if (!restaurant) {
+            return forbiddenResponse(res, 'No restaurant found for this user');
+        }
 
-  try {
-    const restaurant = await getOwnedRestaurant(req.user.id);
-    if (!restaurant) {
-      return res.status(403).json({ message: 'Restaurant not found' });
+        const table = await RestaurantTable.create({
+            restaurant_id: restaurant.id,
+            table_number: table_number.trim(),
+        });
+
+        return successResponse(res, 'Table created successfully', table, 201);
+        
+    } catch (err) {
+        console.error('Create table error:', err);
+        
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return errorResponse(res, 'Table number already exists for this restaurant', 'DUPLICATE_TABLE_NUMBER', null, 409);
+        }
+        
+        return errorResponse(res, 'Failed to create table', 'CREATE_TABLE_ERROR');
     }
-
-    const table = await RestaurantTable.create({
-      restaurant_id: restaurant.id,
-      table_number,
-    });
-
-    return res.status(201).json(table);
-  } catch (err) {
-    console.error('Create table error:', err);
-    return res.status(500).json({ message: 'Failed to create table' });
-  }
 };
-
 
 // GET /tables...
-
 export const getTables = async (req, res) => {
-  try {
-    const restaurant = await getOwnedRestaurant(req.user.id);
-    if (!restaurant) {
-      return res.status(403).json({ message: 'Restaurant not found' });
+    try {
+        const restaurant = await getOwnedRestaurant(req.user.id);
+        if (!restaurant) {
+            return forbiddenResponse(res, 'No restaurant found for this user');
+        }
+
+        const tables = await RestaurantTable.findAll({
+            where: { restaurant_id: restaurant.id },
+            order: [['created_at', 'ASC']],
+        });
+
+        return successResponse(res, 'Tables retrieved successfully', tables);
+        
+    } catch (err) {
+        console.error('Get tables error:', err);
+        return errorResponse(res, 'Failed to retrieve tables', 'GET_TABLES_ERROR');
     }
-
-    const tables = await RestaurantTable.findAll({
-      where: { restaurant_id: restaurant.id },
-      order: [['created_at', 'ASC']],
-    });
-
-    return res.json(tables);
-  } catch (err) {
-    console.error('Get tables error:', err);
-    return res.status(500).json({ message: 'Failed to fetch tables' });
-  }
 };
-
 
 // PATCH /tables/:id...
-
 export const updateTable = async (req, res) => {
-  const { table_number } = req.body;
+    try {
+        const { table_number } = req.body;
 
-  try {
-    const restaurant = await getOwnedRestaurant(req.user.id);
-    if (!restaurant) {
-      return res.status(403).json({ message: 'Restaurant not found' });
+        const restaurant = await getOwnedRestaurant(req.user.id);
+        if (!restaurant) {
+            return forbiddenResponse(res, 'No restaurant found for this user');
+        }
+
+        const table = await RestaurantTable.findOne({
+            where: {
+                id: req.params.id,
+                restaurant_id: restaurant.id,
+            },
+        });
+
+        if (!table) {
+            return notFoundResponse(res, 'Table');
+        }
+
+        if (table_number && table_number.trim() !== table.table_number) {
+            table.table_number = table_number.trim();
+            await table.save();
+        }
+
+        return successResponse(res, 'Table updated successfully', table);
+        
+    } catch (err) {
+        console.error('Update table error:', err);
+        
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return errorResponse(res, 'Table number already exists for this restaurant', 'DUPLICATE_TABLE_NUMBER', null, 409);
+        }
+        
+        return errorResponse(res, 'Failed to update table', 'UPDATE_TABLE_ERROR');
     }
-
-    const table = await RestaurantTable.findOne({
-      where: {
-        id: req.params.id,
-        restaurant_id: restaurant.id,
-      },
-    });
-
-    if (!table) {
-      return res.status(404).json({ message: 'Table not found' });
-    }
-
-    if (table_number) table.table_number = table_number;
-    await table.save();
-
-    return res.json(table);
-  } catch (err) {
-    console.error('Update table error:', err);
-    return res.status(500).json({ message: 'Failed to update table' });
-  }
 };
-
 
 // DELETE /tables/:id...
 export const deleteTable = async (req, res) => {
-  try {
-    const restaurant = await getOwnedRestaurant(req.user.id);
-    if (!restaurant) {
-      return res.status(403).json({ message: 'Restaurant not found' });
+    try {
+        const restaurant = await getOwnedRestaurant(req.user.id);
+        if (!restaurant) {
+            return forbiddenResponse(res, 'No restaurant found for this user');
+        }
+
+        const table = await RestaurantTable.findOne({
+            where: {
+                id: req.params.id,
+                restaurant_id: restaurant.id,
+            },
+        });
+
+        if (!table) {
+            return notFoundResponse(res, 'Table');
+        }
+
+        await table.destroy();
+
+        return successResponse(res, 'Table deleted successfully', null, 204);
+        
+    } catch (err) {
+        console.error('Delete table error:', err);
+        return errorResponse(res, 'Failed to delete table', 'DELETE_TABLE_ERROR');
     }
-
-    const table = await RestaurantTable.findOne({
-      where: {
-        id: req.params.id,
-        restaurant_id: restaurant.id,
-      },
-    });
-
-    if (!table) {
-      return res.status(404).json({ message: 'Table not found' });
-    }
-
-    await table.destroy();
-
-    return res.json({ message: 'Table deleted successfully' });
-  } catch (err) {
-    console.error('Delete table error:', err);
-    return res.status(500).json({ message: 'Failed to delete table' });
-  }
 };

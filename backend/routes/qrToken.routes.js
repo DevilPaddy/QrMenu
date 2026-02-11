@@ -10,10 +10,12 @@ import {
     isRestaurantOwner,
 } from '../middleware/auth.middleware.js';
 
+import { validateIdParam } from '../middleware/validation.middleware.js';
+
 const router = Router();
 
-router.post('/tables/:id/qr', verifyToken, isRestaurantOwner, generateQRToken);
-router.patch('/qr/:id/rotate', verifyToken, isRestaurantOwner, rotateQRToken);
-router.get('/qr/:id', verifyToken, isRestaurantOwner, getQRToken);
+router.post('/tables/:id/qr', verifyToken, isRestaurantOwner, validateIdParam, generateQRToken);
+router.patch('/qr/:id/rotate', verifyToken, isRestaurantOwner, validateIdParam, rotateQRToken);
+router.get('/qr/:id', verifyToken, isRestaurantOwner, validateIdParam, getQRToken);
 
 export default router;

@@ -11,12 +11,17 @@ import {
     isRestaurantOwner,
 } from '../middleware/auth.middleware.js';
 
+import {
+    validateCreateTable,
+    validateUpdateTable,
+    validateIdParam
+} from '../middleware/validation.middleware.js';
+
 const router = Router();
 
-
-router.post('/', verifyToken, isRestaurantOwner, createTable);
+router.post('/', verifyToken, isRestaurantOwner, validateCreateTable, createTable);
 router.get('/', verifyToken, isRestaurantOwner, getTables);
-router.patch('/:id', verifyToken, isRestaurantOwner, updateTable);
-router.delete('/:id', verifyToken, isRestaurantOwner, deleteTable);
+router.patch('/:id', verifyToken, isRestaurantOwner, validateIdParam, validateUpdateTable, updateTable);
+router.delete('/:id', verifyToken, isRestaurantOwner, validateIdParam, deleteTable);
 
 export default router;
