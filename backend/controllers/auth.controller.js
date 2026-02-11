@@ -11,7 +11,7 @@ import {
 
 const { User } = models;
 
-// Signup..
+// Signup...
 export const signup = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;

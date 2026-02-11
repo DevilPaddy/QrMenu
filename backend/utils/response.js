@@ -1,6 +1,4 @@
-/**
- * Standardized response helper functions
- */
+// Standardized response helper functions...
 
 export const successResponse = (res, message, data = null, statusCode = 200) => {
     const response = {

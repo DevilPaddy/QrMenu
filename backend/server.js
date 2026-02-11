@@ -7,7 +7,8 @@ import subscriptionRoutes from './routes/subscription.routes.js'
 import tablesRoutes from './routes/table.routes.js';
 import qrTokenRoutes from './routes/qrToken.routes.js';
 import sessionRoutes from './routes/session.route.js';
-
+import menuRoutes from './routes/menu.routes.js';
+import cartRoutes from './routes/cart.routes.js';
 
 const { sequelize } = models;
 
@@ -34,9 +35,13 @@ app.use('/api/subscriptions', subscriptionRoutes);
 // Table routes...
 app.use('/api/tables', tablesRoutes);
 // Qr code routes...
-app.use('/api', qrTokenRoutes);
+app.use('/api/qr', qrTokenRoutes);
 // For user session routes...
-app.use('/api', sessionRoutes);
+app.use('/api/sessions', sessionRoutes);
+// For the menu routes
+app.use('/api/menus', menuRoutes);
+// For cart routes
+app.use('/api/cart', cartRoutes);
 
 
 // DB Sync...
