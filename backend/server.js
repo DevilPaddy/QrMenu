@@ -9,6 +9,7 @@ import qrTokenRoutes from './routes/qrToken.routes.js';
 import sessionRoutes from './routes/session.route.js';
 import menuRoutes from './routes/menu.routes.js';
 import cartRoutes from './routes/cart.routes.js';
+import orderRoutes from './routes/order.routes.js';
 
 const { sequelize } = models;
 
@@ -42,6 +43,8 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/menus', menuRoutes);
 // For cart routes
 app.use('/api/cart', cartRoutes);
+// For order routes
+app.use('/api', orderRoutes);
 
 
 // DB Sync...

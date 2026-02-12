@@ -50,7 +50,13 @@ export const generateQRToken = async (req, res) => {
             regenerated_at: new Date(),
         });
 
-        return successResponse(res, 'QR token generated successfully', qrToken, 201);
+        // Include table information in response
+        const responseData = {
+            ...qrToken.toJSON(),
+            table_number: table.table_number
+        };
+
+        return successResponse(res, 'QR token generated successfully', responseData, 201);
         
     } catch (err) {
         console.error('Generate QR error:', err);
@@ -90,7 +96,13 @@ export const rotateQRToken = async (req, res) => {
             regenerated_at: new Date(),
         });
 
-        return successResponse(res, 'QR token rotated successfully', newToken, 201);
+        // Include table information in response
+        const responseData = {
+            ...newToken.toJSON(),
+            table_number: oldToken.RestaurantTable.table_number
+        };
+
+        return successResponse(res, 'QR token rotated successfully', responseData, 201);
         
     } catch (err) {
         console.error('Rotate QR error:', err);
@@ -117,7 +129,13 @@ export const getQRToken = async (req, res) => {
             return forbiddenResponse(res, 'You do not have permission to view this QR token');
         }
 
-        return successResponse(res, 'QR token retrieved successfully', qrToken);
+        // Include table_number at top level for consistency
+        const responseData = {
+            ...qrToken.toJSON(),
+            table_number: qrToken.RestaurantTable.table_number
+        };
+
+        return successResponse(res, 'QR token retrieved successfully', responseData);
         
     } catch (err) {
         console.error('Get QR error:', err);
