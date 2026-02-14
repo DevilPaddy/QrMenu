@@ -1,0 +1,375 @@
+{
+	"info": {
+		"name": "QR Restaurant API - Complete",
+		"description": "Complete API collection for QR Restaurant Menu & Ordering Platform",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "POST Signup",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 201) { const r = pm.response.json(); if (r.data && r.data.token) pm.collectionVariables.set('auth_token', r.data.token); }"]
+						}
+					}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"name\":\"Test User\",\"email\":\"test@example.com\",\"password\":\"password123\",\"role\":\"RESTAURANT_ADMIN\"}"},
+						"url": "{{base_url}}/api/auth/signup"
+					}
+				},
+				{
+					"name": "POST Login",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 200) { const r = pm.response.json(); if (r.data && r.data.token) pm.collectionVariables.set('auth_token', r.data.token); }"]
+						}
+					}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"email\":\"test@example.com\",\"password\":\"password123\"}"},
+						"url": "{{base_url}}/api/auth/login"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Restaurant Management",
+			"item": [
+				{
+					"name": "GET My Restaurant",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 200) { const r = pm.response.json(); if (r.data && r.data.id) pm.collectionVariables.set('restaurant_id', r.data.id); }"]
+						}
+					}],
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}],
+						"url": "{{base_url}}/api/restaurants/me"
+					}
+				},
+				{
+					"name": "PATCH Update Restaurant",
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"name\":\"Updated Restaurant\",\"address\":\"123 Main St\"}"},
+						"url": "{{base_url}}/api/restaurants/me"
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Table Management",
+			"item": [
+				{
+					"name": "POST Create Table",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 201) { const r = pm.response.json(); if (r.data && r.data.id) pm.collectionVariables.set('table_id', r.data.id); }"]
+						}
+					}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"table_number\":\"T001\"}"},
+						"url": "{{base_url}}/api/tables"
+					}
+				},
+				{
+					"name": "GET List Tables",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}],
+						"url": "{{base_url}}/api/tables"
+					}
+				},
+				{
+					"name": "PATCH Update Table",
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"table_number\":\"T001-Updated\"}"},
+						"url": "{{base_url}}/api/tables/{{table_id}}"
+					}
+				},
+				{
+					"name": "DELETE Delete Table",
+					"request": {
+						"method": "DELETE",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}],
+						"url": "{{base_url}}/api/tables/{{table_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "4. QR Token Management",
+			"item": [
+				{
+					"name": "POST Generate QR Token",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 201) { const r = pm.response.json(); if (r.data) { if (r.data.id) pm.collectionVariables.set('qr_token_id', r.data.id); if (r.data.token) pm.collectionVariables.set('qr_token', r.data.token); if (r.data.table_number) console.log('Table Number:', r.data.table_number); } }"]
+						}
+					}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}],
+						"url": "{{base_url}}/api/tables/{{table_id}}/qr"
+					}
+				},
+				{
+					"name": "PATCH Rotate QR Token",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 201) { const r = pm.response.json(); if (r.data) { if (r.data.id) pm.collectionVariables.set('qr_token_id', r.data.id); if (r.data.token) pm.collectionVariables.set('qr_token', r.data.token); if (r.data.table_number) console.log('Table Number:', r.data.table_number); } }"]
+						}
+					}],
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}],
+						"url": "{{base_url}}/api/qr/{{qr_token_id}}/rotate"
+					}
+				},
+				{
+					"name": "GET Get QR Token",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 200) { const r = pm.response.json(); if (r.data && r.data.table_number) console.log('Table Number:', r.data.table_number); }"]
+						}
+					}],
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}],
+						"url": "{{base_url}}/api/qr/{{qr_token_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Session Management",
+			"item": [
+				{
+					"name": "POST Start Session",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 201) { const r = pm.response.json(); if (r.data && r.data.id) pm.collectionVariables.set('session_id', r.data.id); }"]
+						}
+					}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"qr_token\":\"{{qr_token}}\"}"},
+						"url": "{{base_url}}/api/sessions/start"
+					}
+				},
+				{
+					"name": "POST Cancel Session",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"session_id\":{{session_id}}}"},
+						"url": "{{base_url}}/api/sessions/cancel"
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Menu Management",
+			"item": [
+				{
+					"name": "POST Create Menu",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 201) { const r = pm.response.json(); if (r.data && r.data.id) pm.collectionVariables.set('menu_id', r.data.id); }"]
+						}
+					}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"name\":\"Lunch Menu\"}"},
+						"url": "{{base_url}}/api/menus"
+					}
+				},
+				{
+					"name": "GET List Menus",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}],
+						"url": "{{base_url}}/api/menus"
+					}
+				},
+				{
+					"name": "POST Create Menu Item",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 201) { const r = pm.response.json(); if (r.data && r.data.id) pm.collectionVariables.set('menu_item_id', r.data.id); }"]
+						}
+					}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"name\":\"Burger\",\"price\":12.99,\"menu_id\":{{menu_id}}}"},
+						"url": "{{base_url}}/api/menu-items"
+					}
+				},
+				{
+					"name": "PATCH Update Menu Item",
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"name\":\"Cheeseburger\",\"price\":13.99,\"is_available\":true}"},
+						"url": "{{base_url}}/api/menu-items/{{menu_item_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Cart Management",
+			"item": [
+				{
+					"name": "POST Add to Cart",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 201 || pm.response.code === 200) { const r = pm.response.json(); if (r.data && r.data.id) pm.collectionVariables.set('cart_item_id', r.data.id); }"]
+						}
+					}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "X-Session-ID", "value": "{{session_id}}"}, {"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"menu_item_id\":{{menu_item_id}},\"quantity\":2}"},
+						"url": "{{base_url}}/api/cart/items"
+					}
+				},
+				{
+					"name": "PATCH Update Cart Item",
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "X-Session-ID", "value": "{{session_id}}"}, {"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"quantity\":3}"},
+						"url": "{{base_url}}/api/cart/items/{{cart_item_id}}"
+					}
+				},
+				{
+					"name": "DELETE Remove Cart Item",
+					"request": {
+						"method": "DELETE",
+						"header": [{"key": "X-Session-ID", "value": "{{session_id}}"}],
+						"url": "{{base_url}}/api/cart/items/{{cart_item_id}}"
+					}
+				},
+				{
+					"name": "GET Get Cart",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "X-Session-ID", "value": "{{session_id}}"}],
+						"url": "{{base_url}}/api/cart"
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Order Management",
+			"item": [
+				{
+					"name": "POST Create Order",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 201) { const r = pm.response.json(); if (r.data && r.data.id) pm.collectionVariables.set('order_id', r.data.id); }"]
+						}
+					}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "X-Session-ID", "value": "{{session_id}}"}],
+						"url": "{{base_url}}/api/orders"
+					}
+				},
+				{
+					"name": "GET Session Orders",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "X-Session-ID", "value": "{{session_id}}"}],
+						"url": "{{base_url}}/api/orders/session"
+					}
+				},
+				{
+					"name": "GET Restaurant Orders (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}],
+						"url": "{{base_url}}/api/orders"
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Subscription Management",
+			"item": [
+				{
+					"name": "POST Create Subscription (Admin)",
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": ["if (pm.response.code === 201) { const r = pm.response.json(); if (r.data && r.data.id) pm.collectionVariables.set('subscription_id', r.data.id); }"]
+						}
+					}],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"restaurant_id\":{{restaurant_id}},\"plan\":\"PREMIUM\",\"starts_at\":\"2024-01-01T00:00:00.000Z\",\"ends_at\":\"2024-12-31T23:59:59.000Z\"}"},
+						"url": "{{base_url}}/api/subscriptions"
+					}
+				},
+				{
+					"name": "PATCH Cancel Subscription (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}],
+						"url": "{{base_url}}/api/subscriptions/{{subscription_id}}/cancel"
+					}
+				},
+				{
+					"name": "GET My Subscriptions",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{auth_token}}"}],
+						"url": "{{base_url}}/api/subscriptions/me"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{"key": "base_url", "value": "http://localhost:8080"},
+		{"key": "auth_token", "value": ""},
+		{"key": "session_id", "value": ""},
+		{"key": "restaurant_id", "value": ""},
+		{"key": "table_id", "value": ""},
+		{"key": "qr_token", "value": ""},
+		{"key": "qr_token_id", "value": ""},
+		{"key": "menu_id", "value": ""},
+		{"key": "menu_item_id", "value": ""},
+		{"key": "cart_item_id", "value": ""},
+		{"key": "order_id", "value": ""},
+		{"key": "subscription_id", "value": ""}
+	]
+}
